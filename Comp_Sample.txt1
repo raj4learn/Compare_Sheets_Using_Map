@@ -1,0 +1,7 @@
+XLSX_KEY_COL = Emp ID,xy:Mgr ID,xy
+
+COMP_SRC_COLS	 = Emp ID,Name,Age,Salary
+COMP_DEST_COLS	 = Mgr ID,Mgr Name,His Age,Salary
+IGNORE_COMP_COLS = ,SPACE_CASE,SPACE,
+
+
