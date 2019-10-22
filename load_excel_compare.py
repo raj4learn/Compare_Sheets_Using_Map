@@ -23,7 +23,7 @@ f_nm = ""
 #################################################################################
 # Calling Xlsx Input File
 #################################################################################
-def read_xls(isCaseignore, p_file_nm, p_src_pk, p_dest_pk, p_xls_src_cols, p_xls_dest_cols, p_ignore_list, p_Src_Sh, p_Dest_Sh):
+def read_xls(isCaseignore, p_file_nm, p_src_pk, p_dest_pk, p_xls_src_cols, p_xls_dest_cols, p_ignore_list, p_Src_Sh, p_Dest_Sh, p_Out_Sh = "CompOut"):
     m_nm = f_nm + ""
     log.debug(m_nm, "Start Reading Excel File", p_file_nm)
     l_error_flg = False
@@ -102,7 +102,8 @@ def read_xls(isCaseignore, p_file_nm, p_src_pk, p_dest_pk, p_xls_src_cols, p_xls
                     sheet_obj_1 = wb_obj.worksheets[0]  # wb_obj[xlsx_sheet_names[0]]
                     sheet_obj_2 = wb_obj.worksheets[1]  # wb_obj[xlsx_sheet_names[1]]
             '''
-
+            g_sheets = { val : key for key, val in enumerate(list(wb_obj.sheetnames)) }
+            print(f"Sheets: {g_sheets}")
             if type(p_Src_Sh) == int:
                 sheet_obj_1 = wb_obj.worksheets[p_Src_Sh]
             else:
@@ -118,7 +119,7 @@ def read_xls(isCaseignore, p_file_nm, p_src_pk, p_dest_pk, p_xls_src_cols, p_xls
             raise
 
         try:
-            sheet_obj_op = wb_obj.create_sheet("Compared_Output")
+            sheet_obj_op = wb_obj.create_sheet(p_Out_Sh, (g_sheets[p_Dest_Sh] + 1))
         except:
             print(f"Unable to Create a New Sheet in the Excel {p_file_nm}")
             raise
@@ -188,9 +189,19 @@ def read_xls(isCaseignore, p_file_nm, p_src_pk, p_dest_pk, p_xls_src_cols, p_xls
         op_wt_col_at = 4
 
         # Reading Row Names and Getting the Index
+        my_red = xl.styles.colors.Color(rgb='00FF8080')
+        my_green = xl.styles.colors.Color(rgb='00CCFFCC')
+        my_head = xl.styles.colors.Color(rgb='00FFFF00')
+        my_red_fill = xl.styles.fills.PatternFill(patternType='solid', fgColor=my_red)
+        my_green_fill = xl.styles.fills.PatternFill(patternType='solid', fgColor=my_green)
+        my_Header_fill = xl.styles.fills.PatternFill(patternType='solid', fgColor=my_head)
+        header_font = Font(color=colors.BLACK, bold=True)
         for key, val in pk_value_idx_op_d.items():
+            #Writing The Index and Key in Output Excel sheet
             sheet_obj_op.cell(val, 1, val)
             sheet_obj_op.cell(val, 2, key)
+            sheet_obj_op.cell(val, 1).fill = my_green_fill
+            sheet_obj_op.cell(val, 2).fill = my_green_fill
             x_tot_max_row = val
 
         x_tot_max_row = op_rows_idx
@@ -203,13 +214,7 @@ def read_xls(isCaseignore, p_file_nm, p_src_pk, p_dest_pk, p_xls_src_cols, p_xls
         l_src_val = [None] * (x_tot_max_row + 1)
         l_dest_val = [None] * (x_tot_max_row + 1)
 
-        my_red = xl.styles.colors.Color(rgb='00FF8080')
-        my_green = xl.styles.colors.Color(rgb='00CCFFCC')
-        my_head = xl.styles.colors.Color(rgb='00FFFF00')
-        my_red_fill = xl.styles.fills.PatternFill(patternType='solid', fgColor=my_red)
-        my_green_fill = xl.styles.fills.PatternFill(patternType='solid', fgColor=my_green)
-        my_Header_fill = xl.styles.fills.PatternFill(patternType='solid', fgColor=my_head)
-        header_font = Font(color=colors.BLACK, bold=True)
+
         print("Source ".ljust(25) + " = " + "Destination")
         l_regexp_for_column = 0
         for comp_len in range(0, l_xls_src_cols.__len__()):
@@ -241,7 +246,6 @@ def read_xls(isCaseignore, p_file_nm, p_src_pk, p_dest_pk, p_xls_src_cols, p_xls
                     l_dest_val[pk_value_idx_op_d[cln_key]] = cell_val
 
             for l1 in range(1, l_src_val.__len__()):
-
                 #print(f"Reg applied {l_regexp_for_column} - {l_src_val[l1]}")
                 if l_regexp_for_column > 0 or isCaseignore is True:
                     l_regexp_for_column = l_regexp_for_column if (isCaseignore is False) else 7
@@ -258,10 +262,13 @@ def read_xls(isCaseignore, p_file_nm, p_src_pk, p_dest_pk, p_xls_src_cols, p_xls
                     l_op_cell_val = "Not Matching"
                     my_fill = my_red_fill
 
+                # Fill the data for First Row
                 if l1 == 1:
+                    # Fill the header with color
                     sheet_obj_op.cell(l1, op_wt_col_at + 1, l_xls_src_cols[comp_len])
                     sheet_obj_op.cell(l1, op_wt_col_at + 2, l_xls_dest_cols[comp_len])
                     sheet_obj_op.cell(l1, op_wt_col_at + 3, "Difference")
+
                     sheet_obj_op.cell(l1, op_wt_col_at + 1).fill = my_Header_fill
                     sheet_obj_op.cell(l1, op_wt_col_at + 2).fill = my_Header_fill
                     sheet_obj_op.cell(l1, op_wt_col_at + 3).fill = my_Header_fill
@@ -276,6 +283,10 @@ def read_xls(isCaseignore, p_file_nm, p_src_pk, p_dest_pk, p_xls_src_cols, p_xls
                     sheet_obj_op.cell(l1, op_wt_col_at + 2, l_dest_val[l1])
                     sheet_obj_op.cell(l1, op_wt_col_at + 3, l_op_cell_val)
                     sheet_obj_op.cell(l1, op_wt_col_at + 3).fill = my_fill
+
+                    if l_op_cell_val == 'Not Matching':
+                        sheet_obj_op.cell(l1, 1).fill = my_fill
+                        sheet_obj_op.cell(l1, 2).fill = my_fill
 
             op_wt_col_at += 3
 
@@ -350,7 +361,7 @@ def ignore_Regexp(p_code = 0, p_value = ""):
 
 
 def init(p_isSilent, isCaseignore, p_input_map_code, p_input_xls_file, p_input_map_file,
-            p_MapSh, p_SrcSh, p_SrcShKey, p_DestSh, p_DestShKey):
+            p_MapSh, p_SrcSh, p_SrcShKey, p_DestSh, p_DestShKey, p_CompOut_Sh):
     global g_config_d
 
     # Read Additional Configuration File
@@ -380,7 +391,7 @@ def init(p_isSilent, isCaseignore, p_input_map_code, p_input_xls_file, p_input_m
     
         print(f"init :Ignore List:{l_ignore_list}")
     '''
-    l_ret_val = read_xls(isCaseignore, p_input_xls_file, g_src_pk_cell, g_dest_pk_cell, l_xls_src_cols, l_xls_dest_cols, l_ignore_list, p_SrcSh, p_DestSh)
+    l_ret_val = read_xls(isCaseignore, p_input_xls_file, g_src_pk_cell, g_dest_pk_cell, l_xls_src_cols, l_xls_dest_cols, l_ignore_list, p_SrcSh, p_DestSh, p_CompOut_Sh)
     if l_ret_val == False:
         l_message = "Process Completed with Error"
     else:

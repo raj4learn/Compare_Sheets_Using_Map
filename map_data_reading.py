@@ -188,6 +188,11 @@ def read_mapping_data(p_map_code, p_config_d, p_input_file, p_map_file, map_sh, 
             (l_no_need_1, l_no_need_2, src_data, dest_data, lRegexp) = get_sd_map_col_list_from_xlSD(xl_fn=p_input_file, sheet1=src_sh, sheet2=dest_sh)
 
             print(f"src_sh_key:{src_data}-{src_sh_key}:{dest_data}-{dest_sh_key}")
+
+            if src_sh_key.__len__() <= 0 or dest_sh_key.__len__() <= 0:
+                print(f"Error: Auto Map option, must need Source and Destination Key in the parameter")
+                exit(0)
+
             for col_l in src_sh_key:
                 l_tmp = src_data[int(col_l)]
                 src_key.append(l_tmp)
@@ -219,12 +224,14 @@ def read_mapper(p_map_code, p_config_d, p_input_file, p_map_file, p_map_sh, p_sr
 
     (src_key, dest_key, src_data, dest_data, lRegexp) = read_mapping_data(p_map_code, p_config_d, p_input_file, p_map_file, p_map_sh, p_src_sh, p_src_sh_key, p_dest_sh, p_dest_sh_key)
 
+    print_break(80)
     print(f"read_mapper: Source Key:{src_key}")
     print(f"read_mapper: Dest Key:{dest_key}")
     print(f"read_mapper: Source Columns:{src_data}")
     print(f"read_mapper: Dest Columns:{dest_data}")
     print(f"read_mapper: Ignore List:{lRegexp}")
     print_break(80)
+
     return src_key, dest_key, src_data, dest_data, lRegexp
 
 
